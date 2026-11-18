@@ -36,6 +36,7 @@ Whether you're a beginner taking your first steps into cybersecurity, a professi
 ### Core Documentation
 
 - [Getting Started](getting-started.md) - Setup your lab environment
+- [Burp Suite Modern PlayBook](cheatsheets/burp-suite.md) - 2026 hands-on testing guide, extensions matrix & advanced workflows
 - [Contributing Guidelines](CONTRIBUTING.md) - How to contribute
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
 - [Security Policy](SECURITY.md) - Responsible disclosure
