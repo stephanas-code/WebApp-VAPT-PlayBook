@@ -65,6 +65,19 @@ Example payload set
 - Use Repeater’s JSON mode to insert payloads into nested fields. Test arrays and objects.
 - For GraphQL, inject into arguments and variables in the query/mutations.
 
+## 2026 Modern & Argument Injection Testing Workflows
+- **Argument Injection (CWE-88)**:
+  - Many modern backends invoke subprocesses with `shell=False` or fixed binaries (e.g. `git`, `tar`, `curl`, `pdf2text`).
+  - Test injecting arguments starting with `--` or `-`:
+    - Git: `--upload-pack="id"` or `--output=/tmp/owned`
+    - Tar: `--checkpoint=1 --checkpoint-action=exec=whoami`
+    - Curl: `-o /var/www/html/test.txt -d @/etc/passwd`
+- **AI Agent Tool-Calling & Prompt Injection to RCE**:
+  - In webapps integrating LLM agents (e.g. support bots or developer assistants with tool access), inspect tool-call invocation payloads.
+  - Test if indirect prompt injection leads the agent to invoke bash/terminal tools with unsanitized arguments.
+- **AI-Assisted Burp Scripting**:
+  - Right-click suspected sinks in Repeater, copy as cURL, and prompt an AI assistant to generate precise non-destructive time-delay verification scripts (`sleep 5` vs `sleep 0`) to confirm blind injection without destructive side-effects.
+
 ## Reporting within Burp
 - Use Issue definitions: categorize as High/Critical with CWE-78.
 - Provide detailed evidence: request/response pairs, timings, Collaborator interactions, and replayable Repeater tabs.

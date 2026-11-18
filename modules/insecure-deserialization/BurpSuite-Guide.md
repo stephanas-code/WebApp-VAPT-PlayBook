@@ -48,6 +48,25 @@ Use Burp Suite to detect and exploit insecure deserialization, then validate imp
 - .NET ViewState Viewer: decode/inspect, verify MAC/encryption.
 - Additional: Logger++ for better search, Collaborator Client for polling.
 
+## 2026 Modern & AI/ML Deserialization Testing Workflows
+- **FastAPI / Pydantic / Node.js Prototype Pollution Deserialization**:
+  - In Repeater, inspect JSON endpoints accepting recursive objects.
+  - Test prototype pollution injection into JSON parsers (`__proto__`, `constructor.prototype`):
+    ```json
+    {
+      "__proto__": {
+        "isAdmin": true,
+        "status": "authenticated"
+      }
+    }
+    ```
+- **ML Model & Pickle Deserialization in AI Pipelines**:
+  - Many modern web apps allow uploading pre-trained models or weights (`.pkl`, `.pt`, `.bin`, `.joblib`).
+  - Test if the backend executes `torch.load()` or `pickle.loads()` without `weights_only=True` by firing a harmless Collaborator DNS ping payload during model import.
+- **AI-Assisted Gadget & Payload Triage**:
+  - Use Burp Collaborator to safely confirm OOB DNS interactions without triggering destructive payloads.
+  - Copy candidate error traces (e.g. Jackson polymorphic type handling errors, `System.Text.Json` exceptions) into an AI assistant to verify whether target classes match safe DTO boundaries or indicate vulnerable type deserialization.
+
 ## Validation and Evidence
 - Favor OOB via Collaborator to prove code execution without dangerous commands.
 - Capture request/response pairs and timestamps, Collaborator payload IDs.

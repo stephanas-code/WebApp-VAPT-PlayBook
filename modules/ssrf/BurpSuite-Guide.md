@@ -67,7 +67,19 @@ Provide a consistent Burp Suite workflow to identify, exploit, and confirm SSRF 
   - Internal admin interfaces may enable configuration tampering
   - Access to internal data stores (Elasticsearch/Redis) can expose data
 
-### 8) Retesting After Fixes
+### 8) 2026 Modern Cloud & AI Agent SSRF Testing
+- **AWS IMDSv2 Token Header Injection**:
+  - Test if SSRF allows injecting headers or sending custom PUT requests to obtain an IMDSv2 token:
+    `PUT http://169.254.169.254/latest/api/token` with header `X-aws-ec2-metadata-token-ttl-seconds: 21600`.
+- **Headless Browser & PDF Generator SSRF**:
+  - In webapps offering "Export as PDF" or "Preview Link", inject HTML/SVG tags containing dynamic fetches:
+    `<iframe src="http://169.254.169.254/latest/meta-data/"></iframe>` or `<link rel="attachment" href="file:///etc/passwd">`.
+- **AI Agent & RAG Web Fetch SSRF**:
+  - Test AI search bots and tool-calling web fetchers by submitting intranet URLs or URLs pointing to loopback/private CIDRs.
+- **AI-Assisted Burp Automation**:
+  - Export the target request to Python, and prompt an AI assistant: *"Generate an asynchronous Python script with dnspython and httpx to verify whether the server-side URL parser is vulnerable to DNS rebinding by alternating between a public test server IP and 127.0.0.1 on successive lookups."*
+
+### 9) Retesting After Fixes
 - Confirm non-HTTP schemes rejected server-side
 - Verify private IP ranges and metadata IP blocked
 - Ensure redirects are validated at each hop

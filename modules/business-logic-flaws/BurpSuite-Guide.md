@@ -55,22 +55,34 @@ Additionally:
 - Use Intruder to brute-force ids (see below)
 
 ## Concurrency and Race Condition Testing
-Use Turbo Intruder for parallel requests.
+Use Turbo Intruder with the **Single-Packet Attack** to eliminate network jitter when testing state synchronization.
 
-1. Send target request (e.g., apply-coupon) to Turbo Intruder
-2. Select race.py or custom script:
+1. Send target request (e.g., apply-coupon, redeem-points, transfer-funds) to Turbo Intruder.
+2. Configure gate-synchronized request releasing:
 
 ```python
 def queueRequests(target, wordlists):
-    engine = RequestEngine(..., concurrentConnections=10)
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=30,
+                           requestsPerConnection=100,
+                           pipeline=False)
+
+    # Queue 20 requests behind a synchronization gate
     for i in range(20):
-        engine.queue(target.req)
-        
+        engine.queue(target.req, gate='race1')
+
+    # Release all requests simultaneously in a single TCP/TLS packet
+    engine.openGate('race1')
+
 def handleResponse(req, interesting):
     table.add(req)
 ```
 
-3. Launch attack; observe duplicated effects (discount applied twice, double credit)
+3. Launch attack; filter responses by status code and length to identify duplicated effects (discount applied twice, negative inventory, double balance credit).
+
+## 2026 Modern & AI-Assisted Workflows
+- **Repeater Tab Groups**: Organize complex multi-step purchase workflows into color-coded Repeater Tab Groups (e.g. `Step 1 - Cart`, `Step 2 - Apply Discount`, `Step 3 - Finalize`) and use **Send group in sequence (single connection)** to test session reuse and state-machine integrity.
+- **AI-Assisted Invariant Synthesis**: Right-click state-changing requests, export as cURL/Python, and prompt an AI assistant to auto-generate property-based test matrices (e.g. testing combinations of promo codes, currency types, and negative quantities) using `pytest` or `hypothesis`.
 
 ## Intruder for Fuzzing Quantities and Limits
 1. Send request to Intruder (Ctrl+I)

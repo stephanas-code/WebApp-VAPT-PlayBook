@@ -79,6 +79,16 @@ Evidence: Set-Cookie without Secure/HttpOnly, low-entropy results, predictable t
 
 ---
 
+## 9.1) 2026 Modern & AI-Assisted Data Protection Workflows
+- **GraphQL Schema & Over-Fetching Detection**:
+  - In Repeater, analyze GraphQL responses for Broken Object Property Level Authorization (BOPLA) and excessive data exposure (e.g. queries returning full user objects including hashed credentials, internal roles, and stripe customer IDs).
+- **Post-Quantum TLS (PQC) & Hybrid Handshake Checks**:
+  - Inspect TLS handshake parameters in Burp's Event Log and Target attributes to check if edge terminators support modern hybrid post-quantum key exchange (`X25519MLKEM768`).
+- **AI-Assisted PII/Secret Regex Scrubbing**:
+  - Use Burp Logger++ with AI regex pipelines to automatically tag responses containing raw unmasked PANs, JWT secrets, AWS/GCP access keys, and private API credentials across multi-gigabyte crawl datasets.
+
+---
+
 ## 10) TLS and Cipher Checks (adjacent tools)
 - While Burp records traffic, run testssl.sh/sslscan externally; attach results to Burp issue notes.
 - Confirm TLS minimum version and HSTS preload eligibility.

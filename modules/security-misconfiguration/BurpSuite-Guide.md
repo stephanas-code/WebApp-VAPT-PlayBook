@@ -47,9 +47,16 @@ Checklist (Passive):
 - Manually try /.git/, /.svn/, /backup/, /old/, /debug/, /actuator
 - If .git exposed, capture evidence and note use of git-dumper offline
 
-## 8) Cloud and Metadata Indicators
-- Inspect JS/HTML for bucket names and endpoints
-- Check signed URLs and ACL hints; do not alter/abuse production cloud assets
+## 8) Cloud, Metadata and Modern Infrastructure Indicators
+- Inspect JS/HTML for bucket names, internal endpoints, and cloud keys.
+- Check signed URLs and ACL hints; do not alter/abuse production cloud assets.
+- Cloud metadata service detection: test whether reverse proxy or load balancer endpoints forward client-supplied Host/SNI headers to `169.254.169.254`.
+
+## 8.1) 2026 Modern & AI-Assisted Configuration Auditing
+- **Cross-Origin Opener / Embedder / Resource Policies (COOP/COEP/CORP)**:
+  - In Repeater, inspect response headers on sensitive authenticated pages for XS-Leak defenses (`Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`).
+- **Modern CI/CD & Cloud Config Verification with AI**:
+  - Export response headers and proxy findings; prompt an AI assistant: *"Analyze these HTTP headers against the 2026 OWASP ASVS v5.0 and CSP Level 3 standards. Highlight missing modern isolation policies, overly broad CORS reflections, and provide the exact Nginx/Cloudflare configuration snippets to fix them."*
 
 ## 9) TLS/HTTPS Observations
 - Note mixed content in Proxy history

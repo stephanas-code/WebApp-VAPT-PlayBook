@@ -302,14 +302,24 @@ Project options > Sessions > Session Handling Rules > Add
 2. Use Burp's JavaScript analysis tools
 3. Extract token from DOM before request
 
-### Issue: Custom Headers
+### Issue: Custom Headers & JSON Endpoints
 **Solution:**
 ```
 Intercept request and check for:
-- X-CSRF-Token
-- X-XSRF-TOKEN
-- X-Requested-With
+- X-CSRF-Token / X-XSRF-TOKEN / X-Requested-With
+- Content-Type: application/json -> Test if the backend accepts Content-Type: text/plain
+  or application/x-www-form-urlencoded to permit simple cross-site requests.
 ```
+
+## 2026 Modern & AI-Assisted CSRF Workflows
+- **Fetch Metadata Header Tampering (`Sec-Fetch-*`)**:
+  - In Repeater, test how the server responds when modifying `Sec-Fetch-Site: cross-site` to `same-origin`, or when stripping `Sec-Fetch-*` headers entirely.
+  - Verify if backend endpoints rely solely on standard headers or correctly enforce W3C Resource Isolation Policies.
+- **Next.js Server Actions & Remix Route Auditing**:
+  - Inspect POST requests containing `Next-Action` headers. Test replaying these actions in Repeater with origin headers stripped or pointing to an external domain.
+- **AI-Assisted PoC Generation**:
+  - In Burp Pro, right-click the target request → **Engagement tools** → **Generate CSRF PoC**.
+  - For complex JSON/REST endpoints, copy the request as cURL and prompt an AI assistant: *"Generate an automated HTML/JS proof-of-concept testing cross-site JSON invocation via navigator.sendBeacon and fetch with mode: 'no-cors' for this request."*
 
 ## Best Practices
 

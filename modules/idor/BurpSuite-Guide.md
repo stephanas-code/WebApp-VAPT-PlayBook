@@ -55,6 +55,35 @@ This guide provides practical steps to find and validate IDOR/BOLA using Burp Su
 - Soft-deleted vs hard-deleted resources: 404 vs 403 inconsistencies.
 - Multi-tenant scopes: ensure tests cross tenant boundaries only if authorized.
 
+## Automated Access Control Auditing with Autorize
+The **Autorize** BApp extension is the gold standard for continuous IDOR and BOLA discovery:
+
+1. Install **Autorize** from the BApp Store.
+2. In the Autorize tab:
+   - Click **Configuration** → paste the session cookies/authorization header of **User B (low-privilege victim or cross-tenant user)**.
+   - Set **Check unauthenticated requests** to verify if resources are publicly accessible.
+   - Click **Autorize is off** to toggle it **ON**.
+3. Now browse the web application normally as **User A (admin or attacker)** in Burp's browser.
+4. Autorize automatically duplicates and replays every request with User B's credentials and unauthenticated:
+   - 🔴 **Red (Bypassed!)**: Endpoint returned 200 with identical content to User A (High probability of IDOR).
+   - 🟡 **Orange (Enforced?)**: Different status code or different response length (Investigate in Repeater).
+   - 🟢 **Green (Enforced!)**: Endpoint returned 401/403 or empty response.
+
+## 2026 Modern GraphQL & BOPLA Testing Workflows
+- **Broken Object Property Level Authorization (BOPLA / Mass Assignment)**:
+  - In Repeater, inspect GraphQL queries and mutations (`updateUser`, `createOrganization`).
+  - Attempt requesting or mutating restricted properties:
+    ```graphql
+    mutation {
+      updateProfile(input: { bio: "hacked", role: "ADMIN", isVerified: true }) {
+        user { id role isVerified }
+      }
+    }
+    ```
+- **AI-Assisted Multi-Persona Matrix Generation**:
+  - Export OpenAPI or Postman collections from Burp Target.
+  - Prompt an AI assistant: *"Generate an automated matrix testing script using Python `httpx` testing every GET/PUT route across User A (Tenant 1), User B (Tenant 1), and User C (Tenant 2) to assert strict 403 Forbidden enforcement on foreign IDs."*
+
 ## Remediation Verification
 - Re-test after fixes: confirm 403/404 and no sensitive data leakage.
 - Ensure logs show deny decisions and that indirect references are used.

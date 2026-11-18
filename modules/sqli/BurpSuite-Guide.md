@@ -58,6 +58,16 @@ Content-Type: application/json
 - 500/DB error -> injectable point; pivot to parameterization check
 - Consistent >5s delay on time payloads -> blind SQLi
 
+## 2026 Modern & AI-Assisted SQLi Workflows
+- **Dynamic Identifier & ORDER BY Injection**:
+  - Since SQL parameters cannot parameterize table or column names, test sorting parameters (`/api/items?sort=created_at` or `order=ASC`).
+  - In Repeater, test boolean conditional expression injection: `?sort=(CASE+WHEN+(1=1)+THEN+created_at+ELSE+id+END)`.
+- **Text-to-SQL (Natural Language AI) Prompt Injection**:
+  - For applications featuring AI analytics queries ("Ask AI about your data"), intercept the prompt dispatch request.
+  - Test if prompt injection causes the LLM to output unsanitized SQL statements (e.g. `SELECT * FROM users WHERE 1=1`) that bypass UI restrictions.
+- **AI-Assisted Burp Automation**:
+  - Right-click suspicious SQLi response in Repeater → copy as cURL → prompt an AI assistant: *"Analyze this response diff and write an asynchronous Python `httpx` script confirming time-based blind injection with a 99% confidence interval using 5 baseline requests and 5 delayed requests."*
+
 ## Useful Burp Features
 
 - Logger, Target scope, Repeater, Intruder (Pitchfork/Cluster Bomb), Decoder, Comparer

@@ -480,6 +480,21 @@ For each vulnerability found, document:
 
 ---
 
+## 2026 Modern & AI-Assisted Upload Testing Workflows
+- **Direct-to-Cloud Storage Testing (S3/GCS Presigned URLs)**:
+  - Intercept the pre-upload initiation request (e.g. `POST /api/upload/sign`).
+  - Examine policy constraints in the returned presigned URL/POST form:
+    - Attempt tampering with the `Content-Type` header during the direct PUT/POST to the storage bucket.
+    - Test uploading executable extensions (`.html`, `.svg`, `.shtml`) directly to the bucket to verify if the bucket permits public script execution or serves `Content-Disposition: attachment`.
+- **Zip Slip & Archive Traversal Auditing**:
+  - In Repeater, inspect archive uploads (`.zip`, `.tar.gz`) used in bulk import or backup restore features.
+  - Test if entries containing path traversal (`../../../../var/www/html/shell.php`) overwrite files outside the extraction sandbox.
+- **AI-Assisted Parser & Polyglot Fuzzing**:
+  - Export the multi-part boundary request to Python using Burp Montoya API or cURL.
+  - Prompt an AI assistant to generate minimal benign polyglot headers (GIF89a + SVG script / EXIF comment metadata) to verify whether image re-encoding or Content Disarm & Reconstruction (CDR) filters sanitize untrusted files.
+
+---
+
 ## Best Practices
 
 - Always work in authorized environments
@@ -500,5 +515,5 @@ For each vulnerability found, document:
 ---
 
 **Module**: File Upload Vulnerabilities  
-**Version**: 1.0  
-**Last Updated**: October 2025
+**Version**: 2.0 (2026 Edition)  
+**Maintained by**: Stephanas Odogu
