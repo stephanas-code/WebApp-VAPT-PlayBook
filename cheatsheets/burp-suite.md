@@ -1,55 +1,118 @@
 # 🛠️ Modern Burp Suite Pro & Community PlayBook (2026 Edition)
 
-A hands-on, fast-reference guide designed for web application security assessments, API penetration testing, and bug bounty workflows using modern Burp Suite features, BApp extensions, and automation.
+A step-by-step, hands-on beginner's guide to opening Burp Suite, setting up your environment for testing a target domain (e.g. `target.com`), capturing your first request, and applying modern workflows.
 
 ---
 
 ## 📑 Table of Contents
-1. [Target Scope & Noise Reduction](#1-target-scope--noise-reduction)
-2. [Modern Browser Integration & TLS Handling](#2-modern-browser-integration--tls-handling)
-3. [Essential BApp Store Extensions Matrix](#3-essential-bapp-store-extensions-matrix)
-4. [Modern HTTP/2 & HTTP/3 Protocol Testing](#4-modern-http2--http3-protocol-testing)
-5. [Single-Packet Attack & Race Conditions (Turbo Intruder)](#5-single-packet-attack--race-conditions-turbo-intruder)
-6. [API & Single Page App (SPA) Testing](#6-api--single-page-app-spa-testing)
-7. [Automated Macro / Session Handling Rules](#7-automated-macro--session-handling-rules)
-8. [Match and Replace Quality-of-Life Rules](#8-match-and-replace-quality-of-life-rules)
-9. [AI & Modern Assistant Integration](#9-ai--modern-assistant-integration)
+1. [Day 0: Launching Burp Suite for the First Time](#1-day-0-launching-burp-suite-for-the-first-time)
+2. [Setting Up Your Target Scope (`target.com`)](#2-setting-up-your-target-scope-targetcom)
+3. [Connecting Your Browser & Capturing Your First Request](#3-connecting-your-browser--capturing-your-first-request)
+4. [Mastering the Core Tabs (Proxy, Repeater, Intruder, Comparer)](#4-mastering-the-core-tabs-proxy-repeater-intruder-comparer)
+5. [Essential BApp Store Extensions Matrix](#5-essential-bapp-store-extensions-matrix)
+6. [Modern HTTP/2 & HTTP/3 Protocol Testing](#6-modern-http2--http3-protocol-testing)
+7. [Single-Packet Attack & Race Conditions (Turbo Intruder)](#7-single-packet-attack--race-conditions-turbo-intruder)
+8. [API & Single Page App (SPA) Testing](#8-api--single-page-app-spa-testing)
+9. [Automated Macro / Session Handling Rules](#9-automated-macro--session-handling-rules)
+10. [Match and Replace Quality-of-Life Rules](#10-match-and-replace-quality-of-life-rules)
+11. [AI & Modern Assistant Integration](#11-ai--modern-assistant-integration)
 
 ---
 
-## 1. Target Scope & Noise Reduction
+## 1. Day 0: Launching Burp Suite for the First Time
 
-Don't let third-party trackers, analytics, and CDNs clutter your HTTP history.
+Whether you are on Windows, macOS, or Kali Linux:
 
-### Step-by-Step Advanced Scope Setup:
-1. Navigate to **Target** → **Scope settings**.
-2. Check **Use advanced scope control**.
+1. **Launch Burp Suite** (Community or Professional).
+2. **Startup Wizard**:
+   - **Project file**: 
+     - *Community Edition*: Select **Temporary project in memory** → click **Next**.
+     - *Professional Edition*: Select **New project on disk**, name it (e.g. `audit-target.com.burp`), and choose a folder.
+   - **Configuration**: Select **Use Burp defaults** → click **Start Burp**.
+3. You will land on the **Dashboard** tab showing the event log and task panel.
+
+---
+
+## 2. Setting Up Your Target Scope (`target.com`)
+
+> 💡 **Why Scope Matters**: Setting scope ensures you **only intercept and test your authorized target**, ignoring background traffic, Windows telemetry, analytics scripts, and third-party CDNs.
+
+### Step-by-Step Beginner Scope Setup:
+
+1. Go to the **Target** tab at the top → select **Scope settings**.
+2. Check the box for **Use advanced scope control**.
 3. Under **Include in scope**, click **Add**:
-   - Protocol: `Any`
-   - Host or IP range: `.*\.targetdomain\.com$`
-   - File: `^/.*`
-4. Under **Exclude from scope**, add regex rules for noise:
-   - `.*(google-analytics\.com|googletagmanager\.com|facebook\.com|sentry\.io|datadoghq\.com).*`
-   - `.*\.(png|jpg|jpeg|gif|css|woff|woff2|svg|ico)$`
-5. In **Proxy** → **HTTP history**, click the **Filter bar** at the top:
+   - **Prefix**: *(leave blank)*
+   - **Protocol**: `Any`
+   - **Host or IP range**: `.*\.target\.com$` *(or `target\.com`)*
+   - **Port**: *(leave blank)*
+   - **File**: `^/.*`
+   - Click **OK**.
+4. Under **Exclude from scope**, add common noise domains so they don't fill your history:
+   - Click **Add** → Host: `.*(google-analytics\.com|googletagmanager\.com|facebook\.com|sentry\.io|datadoghq\.com).*` → **OK**.
+   - Click **Add** → File: `.*\.(png|jpg|jpeg|gif|css|woff|woff2|svg|ico)$` → **OK**.
+5. **Clean Your HTTP History View**:
+   - Click the **Proxy** tab → **HTTP history**.
+   - Click the **Filter bar** (the gray bar near the top: *Filter: Showing all items*).
    - Check **Show only in-scope items**.
    - Check **Hide items without responses**.
+   - Click anywhere outside the popup to apply the filter. Now, only `target.com` requests will be visible!
 
 ---
 
-## 2. Modern Browser Integration & TLS Handling
+## 3. Connecting Your Browser & Capturing Your First Request
 
-Avoid system-wide proxy conflicts and browser certificate pinning issues by using Burp's embedded Chromium browser.
+The easiest, error-free method in modern Burp Suite is the **Embedded Chromium Browser** (no manual proxy settings or certificate imports required).
 
-### Best Practices:
-- **Embedded Browser**: Go to **Proxy** → **Intercept** → click **Open Browser**. This launches Chromium pre-configured with the Burp proxy and CA certificate installed.
-- **Passkeys / WebAuthn**: Modern Chromium handles WebAuthn virtual authenticators under **DevTools** (`F12`) → **More tools** → **WebAuthn** to test hardware token flows through the proxy.
-- **Upstream Proxy / Tor Routing**: If routing through corporate proxies or an egress SOCKS5 gateway:
-  - Go to **Settings** → **Network** → **Connections** → **SOCKS Proxy** (`127.0.0.1:9050`).
+### Option A: Using Burp's Embedded Browser (Recommended for Beginners)
+1. Go to the **Proxy** tab → select **Intercept**.
+2. Verify whether the button says **Intercept is on** or **Intercept is off**:
+   - Toggle it to **Intercept is off** (this lets traffic flow through smoothly while logging to HTTP History).
+3. Click the **Open Browser** button.
+4. A clean Chromium browser window opens. It is pre-configured with Burp's proxy listener (`127.0.0.1:8080`) and trusted CA certificate.
+5. In the address bar, type `https://target.com` and hit Enter.
+6. Return to Burp Suite → click **Proxy** → **HTTP history**. You will see all HTTP requests and responses made to `target.com`!
+
+### Option B: Using Your Own Browser (Firefox / Chrome)
+If you prefer your daily driver:
+1. In your browser settings, set HTTP/HTTPS proxy to `127.0.0.1` port `8080`.
+2. Browse to `http://burp` in the address bar → click the top-right button **CA Certificate** to download `cacert.der`.
+3. In browser settings, search for **Certificates** → **View Certificates** → **Authorities** tab → click **Import**.
+4. Select `cacert.der` and check **Trust this CA to identify websites** → click **OK**.
 
 ---
 
-## 3. Essential BApp Store Extensions Matrix
+## 4. Mastering the Core Tabs (Proxy, Repeater, Intruder, Comparer)
+
+### 1) Proxy (Inspect & Tamper Live Traffic)
+- **Intercept On**: Pauses requests before they leave your computer. You can edit parameters (e.g. `role=user` to `role=admin`) and click **Forward**, or click **Drop** to discard.
+- **HTTP History**: A complete log of every request sent and received. Click any request to view its raw headers, parameters, and response body.
+
+### 2) Repeater (Modify & Resend)
+- In **HTTP history**, right-click any interesting request (e.g. `POST /api/login` or `GET /user/profile`) → click **Send to Repeater** (or press `Ctrl+R`).
+- Switch to the **Repeater** tab:
+  - Modify headers, parameters, or payloads in the left pane.
+  - Click **Send**.
+  - Review the immediate server response in the right pane without refreshing your browser.
+
+### 3) Intruder (Targeted Automation & Fuzzing)
+- In Repeater or Proxy, right-click a request → **Send to Intruder** (or press `Ctrl+I`).
+- Under the **Positions** tab:
+  - Click **Clear §** to remove default markers.
+  - Highlight the specific parameter value you want to test (e.g. `id=§1§`).
+  - Click **Add §** around the parameter.
+- Under the **Payloads** tab:
+  - Select **Payload type** (e.g. *Numbers*, *Simple list*, or *Brute forcer*).
+  - Load your test list.
+- Click **Start attack** in the top-right corner to view response statuses and lengths.
+
+### 4) Comparer (Visual Diffing)
+- Right-click two different requests or responses in Proxy or Repeater → select **Send to Comparer**.
+- Switch to the **Comparer** tab → click **Words** or **Bytes** to highlight exact textual differences (useful for finding blind injection or authorization differences).
+
+---
+
+## 5. Essential BApp Store Extensions Matrix
 
 Install these extensions via **Extensions** → **BApp Store** to supercharge manual and semi-automated testing:
 
@@ -64,9 +127,9 @@ Install these extensions via **Extensions** → **BApp Store** to supercharge ma
 
 ---
 
-## 4. Modern HTTP/2 & HTTP/3 Protocol Testing
+## 6. Modern HTTP/2 & HTTP/3 Protocol Testing
 
-Burp Suite Pro supports native HTTP/2 with full request smuggling and frame inspection capabilities.
+Burp Suite supports native HTTP/2 with full request smuggling and frame inspection capabilities.
 
 ### Key Workflows:
 - **HTTP/2 Request Smuggling (H2.CL / H2.TE / H2 Downgrading)**:
@@ -77,7 +140,7 @@ Burp Suite Pro supports native HTTP/2 with full request smuggling and frame insp
 
 ---
 
-## 5. Single-Packet Attack & Race Conditions (Turbo Intruder)
+## 7. Single-Packet Attack & Race Conditions (Turbo Intruder)
 
 Traditional multi-threaded race condition tests suffer from network jitter. The **Single-Packet Attack** synchronizes requests inside the same TCP window or TLS frame.
 
@@ -106,7 +169,7 @@ def handleResponse(req, interesting):
 
 ---
 
-## 6. API & Single Page App (SPA) Testing
+## 8. API & Single Page App (SPA) Testing
 
 Modern Single Page Applications communicate over JSON APIs, GraphQL, and WebSockets.
 
@@ -128,7 +191,7 @@ Modern Single Page Applications communicate over JSON APIs, GraphQL, and WebSock
 
 ---
 
-## 7. Automated Macro / Session Handling Rules
+## 9. Automated Macro / Session Handling Rules
 
 When testing endpoints that require fresh anti-CSRF tokens or short-lived bearer tokens that expire quickly:
 
@@ -143,7 +206,7 @@ When testing endpoints that require fresh anti-CSRF tokens or short-lived bearer
 
 ---
 
-## 8. Match and Replace Quality-of-Life Rules
+## 10. Match and Replace Quality-of-Life Rules
 
 Configure these in **Proxy** → **Proxy settings** → **Match and replace** to streamline everyday testing:
 
@@ -157,7 +220,7 @@ Configure these in **Proxy** → **Proxy settings** → **Match and replace** to
 
 ---
 
-## 9. AI & Modern Assistant Integration
+## 11. AI & Modern Assistant Integration
 
 Modern security testing workflows in 2026 leverage AI assistants to accelerate triage and script creation:
 
